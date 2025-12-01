@@ -11,7 +11,14 @@ const PORT = 3000;
 app.use(cors());
 
 // Serve static files from public directory
-app.use(express.static('public'));
+// Serve static files from public directory with no caching
+app.use(express.static('public', {
+  etag: false,
+  lastModified: false,
+  setHeaders: (res, path) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  }
+}));
 
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
@@ -39,15 +46,15 @@ const upload = multer({ storage: storage });
 // GET route: Return image filename based on query parameter
 app.get('/api/getImage', (req, res) => {
   const characterName = req.query.name;
-  
+
   if (!characterName) {
     return res.status(400).json({ error: 'Character name is required' });
   }
-  
+
   // Check which image file exists for this character
   const possibleExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
   let imageFile = null;
-  
+
   for (const ext of possibleExtensions) {
     const filename = `${characterName}${ext}`;
     const filepath = path.join(__dirname, 'public', filename);
@@ -56,30 +63,30 @@ app.get('/api/getImage', (req, res) => {
       break;
     }
   }
-  
+
   if (!imageFile) {
     return res.status(404).json({ error: 'Image not found for this character' });
   }
-  
+
   res.json({ filename: imageFile });
 });
 
 // POST route: Upload and replace character image
 app.post('/api/upload', upload.single('image'), (req, res) => {
   const characterName = req.query.name;
-  
+
   if (!characterName) {
     return res.status(400).json({ error: 'Character name is required in query parameter' });
   }
-  
+
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
-  
-  res.json({ 
-    success: true, 
+
+  res.json({
+    success: true,
     message: `Image for ${characterName} uploaded successfully`,
-    filename: req.file.filename 
+    filename: req.file.filename
   });
 });
 
