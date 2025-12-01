@@ -78,6 +78,12 @@ function App() {
 
             if (response.ok) {
                 setUploadMessage(`✓ ${data.message}`);
+
+                // If the uploaded character matches the currently searched character, refresh the image
+                if (searchName && uploadName.toLowerCase() === searchName.toLowerCase()) {
+                    setDisplayedImage(`${API_BASE_URL}/${data.filename}?t=${Date.now()}`);
+                }
+
                 // Clear the form
                 setUploadName('');
                 setSelectedFile(null);
